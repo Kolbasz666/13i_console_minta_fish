@@ -10,7 +10,6 @@ namespace fish;
 public class ServerConnection
 {
     HttpClient client = new();
-    string Token = null;
     public ServerConnection(string url)
     {
         //http://127.1.1.1:3000

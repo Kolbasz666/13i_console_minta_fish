@@ -1,7 +1,4 @@
-﻿using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-
-namespace fish;
+﻿namespace fish;
 
 internal class Program
 {
@@ -63,13 +60,11 @@ internal class Program
             }
         }
     }
-
     private static void Logout()
     {
         connection.Logout();
         loggedIn = false;
     }
-
     private static async Task NewFish()
     {
         Console.Write("Add meg a hal nevét: ");
@@ -84,14 +79,12 @@ internal class Program
             Console.WriteLine("Súlynak számot kell megadni!");
         }
     }
-
     private static async Task ListMyFish()
     {
         List<Fish> allFish = await connection.GetMyFish();
         allFish.ForEach(fish => Console.WriteLine($"Név: {fish.name}, súly: {fish.weight * 100} dkg"));
         Console.ReadKey();
     }
-
     static async Task ListFish()
     {
         List<Fish> allFish = await connection.GetFish();
