@@ -67,7 +67,7 @@ public class ServerConnection
             Console.WriteLine(err.Message);
         }
     }
-    public async Task Login(string username, string password)
+    public async Task<bool> Login(string username, string password)
     {
         try
         {
@@ -79,10 +79,15 @@ public class ServerConnection
             string responseString = await resonse.Content.ReadAsStringAsync();
             Token result = JsonSerializer.Deserialize<Token>(responseString);
             client.DefaultRequestHeaders.Add("authorization", result.token);
+            return true;
         }
         catch (Exception err)
         {
             Console.WriteLine(err.Message);
+            return false;
         }
+    }
+    public void Logout() {
+        client.DefaultRequestHeaders.Clear();
     }
 }

@@ -1,4 +1,7 @@
-﻿namespace fish;
+﻿using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+
+namespace fish;
 
 internal class Program
 {
@@ -11,63 +14,130 @@ internal class Program
         while (command == "run")
         {
             int number = WriteMenu();
-            DoStg(number);
+            await DoStg(number);
         }
     }
-    static void DoStg(int number)
+    static async Task DoStg(int number)
     {
         if (!loggedIn)
         {
             switch (number)
             {
                 case 1:
-                    ListFish();
+                    await ListFish();
                     break;
                 case 2:
-                    FilterFish();
+                    await FilterFish();
                     break;
                 case 3:
-                    SearchFish();
+                    await SearchFish();
                     break;
                 case 4:
-                    GroupFish();
+                    await GroupFish();
                     break;
                 case 5:
-                    Login();
+                    await Login();
                     break;
-
+                case 6:
+                    command = "exit";
+                    break;
+                default:
+                    break;
             }
         }
         else
         {
-
+            switch (number)
+            {
+                case 1:
+                    await ListMyFish();
+                    break;
+                case 2:
+                    await NewFish();
+                    break;
+                case 3:
+                    Logout();
+                    break;
+                default:
+                    break;
+            }
         }
     }
-    static async void ListFish()
+
+    private static void Logout()
+    {
+        connection.Logout();
+        loggedIn = false;
+    }
+
+    private static async Task NewFish()
+    {
+        Console.Write("Add meg a hal nevét: ");
+        string name = Console.ReadLine().Trim();
+        Console.Write("Add meg a hal súlyát: ");
+        string weightString = Console.ReadLine().Trim();
+        if (double.TryParse(weightString, out double weight)) {
+            await connection.PostFish(name, weight);
+        }
+        else
+        {
+            Console.WriteLine("Súlynak számot kell megadni!");
+        }
+    }
+
+    private static async Task ListMyFish()
+    {
+        List<Fish> allFish = await connection.GetMyFish();
+        allFish.ForEach(fish => Console.WriteLine($"Név: {fish.name}, súly: {fish.weight * 100} dkg"));
+        Console.ReadKey();
+    }
+
+    static async Task ListFish()
     {
         List<Fish> allFish = await connection.GetFish();
         allFish.ForEach(fish => Console.WriteLine($"Név: {fish.name}, súly: {fish.weight * 100} dkg"));
         Console.ReadKey();
     }
-    static async void FilterFish()
+    static async Task FilterFish()
     {
         List<Fish> allFish = await connection.GetFish();
+        Console.WriteLine("Add meg a minimum súlyt dkg-ban");
         int number = GetNumber(0, int.MaxValue);
         allFish.Where(fish => fish.weight * 100 > number).ToList()
             .ForEach(fish => Console.WriteLine($"Név: {fish.name}, súly: {fish.weight * 100} dkg"));
         Console.ReadKey();
     }
-    static void SearchFish()
+    static async Task SearchFish()
     {
-
+        List<Fish> allFish = await connection.GetFish();
+        Console.WriteLine("Add meg a keresett szórészletet");
+        string name = Console.ReadLine().Trim();
+        allFish.Where(fish => fish.name.Contains(name)).ToList()
+            .ForEach(fish => Console.WriteLine($"Név: {fish.name}, súly: {fish.weight * 100} dkg"));
+        Console.ReadKey();
     }
-    static void GroupFish()
+    static async Task GroupFish()
     {
-
+        List<Fish> allFish = await connection.GetFish();
+        int under100 = allFish.Where(fish => fish.weight < 100).Count();
+        int under200 = allFish.Where(fish => fish.weight >= 100 && fish.weight <= 200).Count();
+        int over200 = allFish.Where(fish => fish.weight > 200).Count();
+        Console.WriteLine("Statisztika");
+        Console.WriteLine("Halak súlya csoportosítva");
+        Console.WriteLine($"100kg alatt: {under100}");
+        Console.WriteLine($"100kg - 200kg: {under200}");
+        Console.WriteLine($"200kg felett: {over200}");
+        Console.ReadKey();
     }
-    static void Login()
+    static async Task Login()
     {
-
+        Console.Write("Add meg a felhasználóneved: ");
+        string username = Console.ReadLine().Trim();
+        Console.Write("Add meg a jelszót: ");
+        string password = Console.ReadLine().Trim();
+        if (await connection.Login(username, password)) {
+            loggedIn = true;
+        }
     }
     static int WriteMenu()
     {
@@ -79,9 +149,10 @@ internal class Program
             Console.WriteLine("3. Név szerinti keresés rész-illesztéssel");
             Console.WriteLine("4. Halak csoportosítása súly alapján");
             Console.WriteLine("5. Bejelentkezés");
+            Console.WriteLine("6. Kilépés");
             Console.WriteLine("");
             Console.WriteLine("Kérlek válassz egy opciót!");
-            return GetNumber(1, 5);
+            return GetNumber(1, 6);
         }
         else
         {
@@ -95,7 +166,7 @@ internal class Program
     }
     static int GetNumber(int min, int max)
     {
-        Console.Write($"Add meg a számot {min} és {max} között! ");
+        Console.WriteLine($"Add meg a számot {min} és {max} között! ");
         string userinput = Console.ReadLine().Trim();
         if (int.TryParse(userinput, out int result))
         {
